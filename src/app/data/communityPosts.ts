@@ -15,6 +15,7 @@ export interface CommunityPost {
   tag: string;
   tagColor: string;
   likes: number;
+  views?: number;
   comments: number;
   replies: CommunityReply[];
 }
@@ -33,6 +34,7 @@ function welcomePost(id: number, course: string, emoji: string, time: string, li
     tag: "Introductions",
     tagColor: "bg-emerald-100 text-emerald-700",
     likes,
+    views: likes * 8 + comments * 3,
     comments,
     replies: [],
   };

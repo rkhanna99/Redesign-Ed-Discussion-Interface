@@ -19,7 +19,7 @@ export interface Thread {
   repliedToMe?: boolean;
 }
 
-export const CURRENT_USER = "Nethmin Liyanage";
+export const CURRENT_USER = "Rahul Khanna";
 
 const initials = (name: string) =>
   name
@@ -54,7 +54,7 @@ export const courseThreads: Record<string, Thread[]> = {
     },
     {
       id: 2695, title: "participation points -- candidate exam questions", category: "Class Discussion",
-      author: "Nethmin Liyanage", time: "3d", timeLong: "3 days ago", comments: 4, views: 41, resolved: true, newComments: 1, repliedToMe: true,
+      author: "Rahul Khanna", time: "3d", timeLong: "3 days ago", comments: 4, views: 41, resolved: true, newComments: 1, repliedToMe: true,
       body: [
         "For the candidate exam question activity: are we supposed to submit one question per person, or one per group? The instructions reference both.",
       ],
@@ -145,6 +145,14 @@ export const courseThreads: Record<string, Thread[]> = {
       body: ["My submission is timing out on the autograder for Project 5, but runs in under a minute locally. Anyone else seeing this today?"],
       answer: { author: "TA - Rahul Menon", avatar: "RM", role: "TA", time: "2 days ago", text: "We had a Gradescope queue spike earlier today. Resubmitting now should work." },
     },
+    {
+      id: 4009, title: "Sharing my Project 7 experiment setup", category: "Class Discussion",
+      author: "Rahul Khanna", time: "18h", timeLong: "18 hours ago", comments: 3, likes: 2, views: 57,
+      body: [
+        "I ended up building a small harness to compare state representations side by side before tuning the learner. It made it much easier to see whether a change was actually improving the policy or just overfitting noise.",
+        "If helpful, I can post a short write-up on how I structured the experiment logs and evaluation plots.",
+      ],
+    },
   ],
   CS6200: [
     {
@@ -189,6 +197,14 @@ export const courseThreads: Record<string, Thread[]> = {
       author: "Tom Henderson", time: "5d", timeLong: "5 days ago", comments: 6, views: 64, resolved: true,
       body: ["Comparing a few thread pool patterns — bounded queue vs. unbounded, blocking vs. non-blocking submit. Curious what others ended up with for Project 1."],
       answer: { author: "TA - Jessica Liu", avatar: "JL", role: "TA", time: "4 days ago", text: "Bounded blocking queue is the safest default for the workload in P1." },
+    },
+    {
+      id: 5009, title: "My notes on debugging Project 3 concurrency issues", category: "Class Discussion",
+      author: "Rahul Khanna", time: "14h", timeLong: "14 hours ago", comments: 2, likes: 1, views: 44,
+      body: [
+        "I kept hitting intermittent failures while stress-testing my file transfer implementation, so I started logging thread lifecycle events and request timing in a separate debug mode.",
+        "That made it much easier to spot where I was reusing buffers too aggressively. Posting in case a lightweight logging approach helps anyone else.",
+      ],
     },
   ],
 };

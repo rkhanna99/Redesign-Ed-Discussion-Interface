@@ -1,4 +1,7 @@
 import { Bell, Home, MessageSquare, UserCog, Users } from "lucide-react";
+import { CURRENT_USER } from "../data/threads";
+import { peerProfiles } from "../peer/peerData";
+import { PeerProfileTrigger } from "../peer/PeerName";
 
 interface HeaderProps {
   view: "course" | "dashboard";
@@ -17,6 +20,7 @@ const courseNames: Record<string, string> = {
 
 export function Header({ view, activeTab, onTabChange, activeCourse, onHome, onOpenSettings }: HeaderProps) {
   const isDashboard = view === "dashboard";
+  const currentUserProfile = peerProfiles[CURRENT_USER];
 
   return (
     <header className="h-12 bg-[#4a2e8a] flex items-center px-4 shrink-0">
@@ -71,15 +75,26 @@ export function Header({ view, activeTab, onTabChange, activeCourse, onHome, onO
           <Bell size={18} />
         </button>
         <button
-          onClick={onHome}
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            onHome();
+          }}
           title="Home"
-          className={`rounded px-2 py-1 transition-colors ${
+          className={`relative z-10 rounded px-2 py-1 transition-colors ${
             isDashboard ? "bg-white/15 text-white" : "text-white/60 hover:bg-white/10 hover:text-white/90"
           }`}
         >
           <Home size={18} />
         </button>
-        <div className="w-7 h-7 rounded-full bg-orange-500 flex items-center justify-center text-white text-xs" style={{ fontWeight: 600 }}>R</div>
+        <PeerProfileTrigger
+          name={CURRENT_USER}
+          buttonClassName="rounded-full transition-transform hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80"
+        >
+          <div className={`flex h-7 w-7 items-center justify-center rounded-full text-xs text-white ${currentUserProfile?.avatarColor || "bg-orange-500"}`} style={{ fontWeight: 600 }}>
+            {currentUserProfile?.avatar || "RK"}
+          </div>
+        </PeerProfileTrigger>
       </div>
     </header>
   );

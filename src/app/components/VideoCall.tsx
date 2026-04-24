@@ -78,10 +78,10 @@ export function VideoCall({ roomName, roomType, onLeave }: VideoCallProps) {
           <div className="relative bg-[#252547] rounded-lg overflow-hidden flex items-center justify-center min-h-0">
             {videoOn ? (
               <div className="w-full h-full bg-gradient-to-br from-[#2a2a4a] to-[#1a1a3a] flex items-center justify-center">
-                <div className="w-20 h-20 rounded-full bg-orange-500 flex items-center justify-center text-white text-2xl" style={{ fontWeight: 600 }}>R</div>
+                <div className="w-20 h-20 rounded-full bg-orange-500 flex items-center justify-center text-white text-2xl" style={{ fontWeight: 600 }}>RK</div>
               </div>
             ) : (
-              <div className="w-16 h-16 rounded-full bg-orange-500 flex items-center justify-center text-white text-xl" style={{ fontWeight: 600 }}>R</div>
+              <div className="w-16 h-16 rounded-full bg-orange-500 flex items-center justify-center text-white text-xl" style={{ fontWeight: 600 }}>RK</div>
             )}
             <div className="absolute bottom-2 left-2 flex items-center gap-1.5">
               <span className="bg-black/60 text-white text-[11px] px-2 py-0.5 rounded">You</span>
