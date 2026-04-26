@@ -1,4 +1,7 @@
-import { Plus, X, Coffee } from "lucide-react";
+import { useState } from "react";
+import { Minus, Plus, X, Coffee } from "lucide-react";
+
+import { communityCategoryOptions, discussionCategoryOptions } from "../data/forumCategories";
 
 interface LeftSidebarProps {
   activeTab: "discussion" | "community";
@@ -6,66 +9,81 @@ interface LeftSidebarProps {
   onCategoryChange: (cat: string | null) => void;
   activeCourse: string;
   onCourseChange: (course: string) => void;
+  onNewThread: () => void;
   width?: number;
 }
 
 const courses = [
-  { id: "CS6750", name: "CS6750", count: 900 },
-  { id: "CS7646", name: "CS7646", count: 1247 },
-  { id: "CS6200", name: "CS6200", count: 683 },
+  { id: "CS6750", name: "CS6750", count: 900, archived: false },
+  { id: "CS7646", name: "CS7646", count: 1247, archived: true },
+  { id: "CS6200", name: "CS6200", count: 683, archived: true },
 ];
 
-const academicCategories = [
-  { name: "Class Discussion", color: "#4a2e8a" },
-  { name: "Announcements", color: "#e67e22" },
-  { name: "Lectures", color: "#3498db" },
-  { name: "Homework", color: "#e74c3c" },
-  { name: "Exam", color: "#e74c3c" },
-  { name: "Quiz", color: "#95a5a6" },
-  { name: "Individual Project", color: "#9b59b6" },
-  { name: "Team Project", color: "#2ecc71" },
-  { name: "Participant Recruitment", color: "#9b59b6" },
-  { name: "Articles", color: "#e74c3c" },
-  { name: "Feedback Box", color: "#9b59b6" },
-  { name: "Resources", color: "#e74c3c" },
-  { name: "Peer Review", color: "#e74c3c" },
-];
+export function LeftSidebar({ activeTab, activeCategory, onCategoryChange, activeCourse, onCourseChange, onNewThread, width }: LeftSidebarProps) {
+  const categories = activeTab === "discussion" ? discussionCategoryOptions : communityCategoryOptions;
+  const currentCourses = courses.filter((course) => !course.archived);
+  const archivedCourses = courses.filter((course) => course.archived);
+  const [archivedOpen, setArchivedOpen] = useState(true);
 
-const communityCategories = [
-  { name: "Introductions", color: "#10b981" },
-  { name: "Career & Jobs", color: "#f59e0b" },
-  { name: "Meetups", color: "#ec4899" },
-  { name: "OMSCS Life", color: "#8b5cf6" },
-  { name: "Hobbies & Interests", color: "#06b6d4" },
-  { name: "Study Groups", color: "#3b82f6" },
-];
-
-export function LeftSidebar({ activeTab, activeCategory, onCategoryChange, activeCourse, onCourseChange, width }: LeftSidebarProps) {
-  const categories = activeTab === "discussion" ? academicCategories : communityCategories;
+  const renderCourse = (course: typeof courses[number]) => (
+    <div
+      key={course.id}
+      onClick={() => onCourseChange(course.id)}
+      className={`flex items-center justify-between py-1 px-1 text-sm rounded cursor-pointer transition-colors ${
+        activeCourse === course.id ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-100"
+      }`}
+    >
+      <div className="min-w-0">
+        <span className="truncate" style={{ fontWeight: activeCourse === course.id ? 500 : 400 }}>{course.name}</span>
+        {course.archived && (
+          <span className="ml-2 rounded-full bg-gray-100 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-gray-500">
+            Archived
+          </span>
+        )}
+      </div>
+      <span className="text-[11px] text-blue-600">{course.count}</span>
+    </div>
+  );
 
   return (
     <div className="border-r border-gray-200 flex flex-col bg-[#fafafa] shrink-0 overflow-y-auto" style={{ width: width ?? 200 }}>
       <div className="p-3">
-        <button className="w-full bg-[#4a2e8a] text-white rounded px-4 py-2 text-sm flex items-center justify-center gap-2 hover:bg-[#3d2574] transition-colors">
+        <button
+          type="button"
+          onClick={onNewThread}
+          className="w-full bg-[#4a2e8a] text-white rounded px-4 py-2 text-sm flex items-center justify-center gap-2 hover:bg-[#3d2574] transition-colors"
+        >
           <Plus size={15} />
           New Thread
         </button>
       </div>
 
       <div className="px-3 pb-2">
-        <p className="text-[10px] text-gray-400 tracking-wider mb-1.5" style={{ fontWeight: 600 }}>COURSES</p>
-        {courses.map((c) => (
-          <div
-            key={c.id}
-            onClick={() => onCourseChange(c.id)}
-            className={`flex items-center justify-between py-1 px-1 text-sm rounded cursor-pointer transition-colors ${
-              activeCourse === c.id ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-100"
-            }`}
-          >
-            <span className="truncate" style={{ fontWeight: activeCourse === c.id ? 500 : 400 }}>{c.name}</span>
-            <span className="text-[11px] text-blue-600">{c.count}</span>
+        <div className="space-y-1">
+          <p className="text-[10px] text-gray-400 tracking-wider mb-1.5" style={{ fontWeight: 600 }}>
+            CURRENT COURSES
+          </p>
+          {currentCourses.map(renderCourse)}
+        </div>
+        {archivedCourses.length > 0 && (
+          <div className="mt-3 space-y-1">
+            <div className="mb-1.5 flex items-center justify-between">
+              <p className="text-[10px] text-gray-400 tracking-wider" style={{ fontWeight: 600 }}>
+                ARCHIVED COURSES
+              </p>
+              <button
+                type="button"
+                onClick={() => setArchivedOpen((open) => !open)}
+                className="rounded p-0.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                aria-label={archivedOpen ? "Collapse archived courses" : "Expand archived courses"}
+                title={archivedOpen ? "Collapse archived courses" : "Expand archived courses"}
+              >
+                {archivedOpen ? <Minus size={12} /> : <Plus size={12} />}
+              </button>
+            </div>
+            {archivedOpen && archivedCourses.map(renderCourse)}
           </div>
-        ))}
+        )}
       </div>
 
       <div className="px-3 pb-2">
@@ -74,15 +92,15 @@ export function LeftSidebar({ activeTab, activeCategory, onCategoryChange, activ
         </p>
         {categories.map((cat) => (
           <div
-            key={cat.name}
-            onClick={() => onCategoryChange(cat.name)}
+            key={cat.value}
+            onClick={() => onCategoryChange(cat.value)}
             className={`flex items-center gap-2 py-1 px-1 text-sm rounded cursor-pointer ${
-              activeCategory === cat.name ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-100"
+              activeCategory === cat.value ? "bg-blue-50 text-blue-700" : "text-gray-700 hover:bg-gray-100"
             }`}
           >
             <span className="w-2 h-2 rounded-sm shrink-0" style={{ backgroundColor: cat.color }} />
-            <span className="truncate">{cat.name}</span>
-            {activeCategory === cat.name && (
+            <span className="truncate">{cat.value}</span>
+            {activeCategory === cat.value && (
               <button
                 type="button"
                 onClick={(event) => {
@@ -90,7 +108,7 @@ export function LeftSidebar({ activeTab, activeCategory, onCategoryChange, activ
                   onCategoryChange(null);
                 }}
                 className="ml-auto rounded p-0.5 text-gray-400 hover:bg-blue-100 hover:text-gray-600"
-                title={`Clear ${cat.name} filter`}
+                title={`Clear ${cat.value} filter`}
               >
                 <X size={12} />
               </button>

@@ -270,7 +270,7 @@ export const peerProfiles: Record<string, PeerProfile> = {
     avatar: "RK",
     avatarColor: "bg-orange-500",
     bio: "Software engineer interested in learning systems, product design, and how class communities can feel more human.",
-    location: "Atlanta, GA",
+    location: "Herndon, VA",
     coursesTaken: ["CS6750", "CS7646", "CS6200", "CSE6242"],
     sharedContext: [
       "This is your visible student profile",
@@ -307,10 +307,11 @@ export const peerProfiles: Record<string, PeerProfile> = {
     avatar: "MH",
     avatarColor: "bg-slate-600",
     bio: "OMSCS program office. Posts registration and scheduling updates for the class.",
-    location: "Atlanta, GA",
+    location: "Herndon, VA",
     coursesTaken: ["CS6750"],
     sharedContext: [
       "Posted an announcement in your current course",
+      "Both located in Herndon, VA",
       "Shared registration information for Fall 2026",
     ],
     background: "Program Staff",
@@ -318,6 +319,7 @@ export const peerProfiles: Record<string, PeerProfile> = {
     interests: ["student ops"],
     labels: [
       { type: "shared_course", text: "CS6750 Spring 2026" },
+      { type: "shared_location", text: "Herndon, VA" },
     ],
   },
   "Emediong Francis Boniface": {

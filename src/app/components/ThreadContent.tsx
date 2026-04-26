@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Star, Eye, Heart, MoreHorizontal } from "lucide-react";
+import { Star, Eye, Heart, MoreHorizontal, Trash2 } from "lucide-react";
 
-import { courseThreads } from "../data/threads";
+import { Thread } from "../data/threads";
 import { filterByDiscussionCategory } from "../data/threadFilters";
 import { CommentComposer, CommentThread, ThreadComment } from "./Commenting";
 import { PeerName, PeerLabels } from "../peer/PeerName";
@@ -9,6 +9,7 @@ import { PeerName, PeerLabels } from "../peer/PeerName";
 interface ThreadContentProps {
   activeCourse: string;
   activeCategory: string | null;
+  threads: Thread[];
   selectedThread: number;
   starred: boolean;
   onToggleStar: () => void;
@@ -20,6 +21,8 @@ interface ThreadContentProps {
   comments: ThreadComment[];
   onAddComment: (text: string, parentId: string | null) => void;
   onDeleteComment: (commentId: string) => void;
+  canDeleteThread?: boolean;
+  onDeleteThread?: () => void;
 }
 
 const threadActionClass = "flex min-w-12 flex-col items-center gap-0.5 text-gray-400 transition-colors";
@@ -29,6 +32,7 @@ const threadActionLabelClass = "text-xs leading-none";
 export function ThreadContent({
   activeCourse,
   activeCategory,
+  threads,
   selectedThread,
   starred,
   onToggleStar,
@@ -40,8 +44,10 @@ export function ThreadContent({
   comments,
   onAddComment,
   onDeleteComment,
+  canDeleteThread = false,
+  onDeleteThread,
 }: ThreadContentProps) {
-  const threads = filterByDiscussionCategory(courseThreads[activeCourse] || courseThreads.CS6750, activeCategory);
+  const visibleThreads = filterByDiscussionCategory(threads, activeCategory);
   const [composerTarget, setComposerTarget] = useState<"post" | string | null>(null);
   const [draft, setDraft] = useState("");
 
@@ -50,7 +56,7 @@ export function ThreadContent({
     setDraft("");
   }, [activeCourse, activeCategory, selectedThread]);
 
-  const thread = threads.find((item) => item.id === selectedThread) || threads[0];
+  const thread = visibleThreads.find((item) => item.id === selectedThread) || visibleThreads[0];
 
   if (!thread) {
     return (
@@ -165,6 +171,12 @@ export function ThreadContent({
 
         <div className="flex items-center gap-3 text-sm text-gray-500 mb-5">
           <button type="button" onClick={() => openComposer("post")} className="hover:text-blue-600">Comment</button>
+          {canDeleteThread && onDeleteThread && (
+            <button type="button" onClick={onDeleteThread} className="inline-flex items-center gap-1 hover:text-rose-600">
+              <Trash2 size={15} />
+              Delete
+            </button>
+          )}
           <button type="button" className="hover:text-gray-700"><MoreHorizontal size={16} /></button>
         </div>
 

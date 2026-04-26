@@ -6,6 +6,10 @@ const communityCategoryAliases: Record<string, string> = {
   "OMSCS Life": "Class Life",
 };
 
+function normalizeCommunityCategory(category: string) {
+  return communityCategoryAliases[category] || category;
+}
+
 export function matchesDiscussionCategory<T extends CategorizedItem>(item: T, category: string | null) {
   if (!category) return true;
   return item.category === category;
@@ -13,7 +17,7 @@ export function matchesDiscussionCategory<T extends CategorizedItem>(item: T, ca
 
 export function matchesCommunityCategory<T extends CategorizedItem>(item: T, category: string | null) {
   if (!category) return true;
-  return item.category === (communityCategoryAliases[category] || category);
+  return normalizeCommunityCategory(item.category) === normalizeCommunityCategory(category);
 }
 
 export function filterByDiscussionCategory<T extends CategorizedItem>(items: T[], category: string | null) {

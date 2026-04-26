@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Eye, MapPin, UserPlus, Sparkles, TrendingUp, Heart, MessageCircle, Star } from "lucide-react";
+import { Eye, MapPin, UserPlus, Sparkles, TrendingUp, Heart, MoreHorizontal, Star, Trash2 } from "lucide-react";
 
-import { communityPosts } from "../data/communityPosts";
+import { CommunityPost } from "../data/communityPosts";
 import { filterByCommunityCategory } from "../data/threadFilters";
 import { CommentComposer, CommentThread, ThreadComment } from "./Commenting";
 import { PeerName, PeerLabels } from "../peer/PeerName";
@@ -29,6 +29,7 @@ interface CommunityFeedProps {
   selectedThread: number;
   activeCourse: string;
   activeCategory: string | null;
+  posts: CommunityPost[];
   starred: boolean;
   onToggleStar: () => void;
   watched: boolean;
@@ -39,6 +40,8 @@ interface CommunityFeedProps {
   comments: ThreadComment[];
   onAddComment: (text: string, parentId: string | null) => void;
   onDeleteComment: (commentId: string) => void;
+  canDeletePost?: boolean;
+  onDeletePost?: () => void;
 }
 
 const postActionClass = "flex min-w-12 flex-col items-center gap-0.5 text-gray-400 transition-colors";
@@ -49,6 +52,7 @@ export function CommunityContent({
   selectedThread,
   activeCourse,
   activeCategory,
+  posts,
   starred,
   onToggleStar,
   watched,
@@ -59,9 +63,11 @@ export function CommunityContent({
   comments,
   onAddComment,
   onDeleteComment,
+  canDeletePost = false,
+  onDeletePost,
 }: CommunityFeedProps) {
-  const posts = filterByCommunityCategory(communityPosts[activeCourse] || communityPosts.CS6750, activeCategory);
-  const post = posts.find((item) => item.id === selectedThread) || posts[0];
+  const visiblePosts = filterByCommunityCategory(posts, activeCategory);
+  const post = visiblePosts.find((item) => item.id === selectedThread) || visiblePosts[0];
   const enrolled = courseEnrolled[activeCourse] || 0;
   const name = courseNames[activeCourse] || activeCourse;
   const [composerTarget, setComposerTarget] = useState<"post" | string | null>(null);
@@ -94,7 +100,7 @@ export function CommunityContent({
     parentId: null,
   }));
   const renderedComments = [...seededComments, ...comments];
-  const commentCount = post.comments + comments.length;
+  const commentCount = renderedComments.length;
   const topLevelCount = renderedComments.filter((comment) => !comment.parentId).length;
 
   const openComposer = (target: "post" | string) => {
@@ -186,48 +192,52 @@ export function CommunityContent({
             </div>
           </div>
 
-          <div className="text-sm text-gray-700 mb-5" style={{ lineHeight: 1.7 }}>
-            {post.body.map((paragraph, index) => (
-              <p key={index} className="mb-3">{paragraph}</p>
-            ))}
-          </div>
-
-          <div className="flex items-center justify-between gap-4 pb-4 border-b border-gray-100">
-            <div className="flex items-center gap-4 text-xs text-gray-400">
+          <div className="mb-8 grid grid-cols-[52px_minmax(0,1fr)] items-start gap-x-4">
+            <div className="flex flex-col items-center pt-1">
               <button
                 type="button"
                 onClick={onToggleLike}
-                className={`flex items-center gap-1 transition-colors ${liked ? "text-red-500 hover:text-red-600" : "hover:text-red-400"}`}
+                className={liked ? "text-red-500 hover:text-red-600" : "text-gray-300 hover:text-red-400"}
               >
-                <Heart size={12} fill={liked ? "currentColor" : "none"} />
-                <span>{likeCount}</span>
+                <Heart size={20} fill={liked ? "currentColor" : "none"} />
               </button>
-              <span className="flex items-center gap-1"><MessageCircle size={12} /> {commentCount}</span>
+              <span className={`mt-1 text-xs ${liked ? "text-red-500" : "text-gray-400"}`}>{likeCount}</span>
             </div>
-            <button type="button" onClick={() => openComposer("post")} className="text-sm text-gray-500 hover:text-blue-600">
-              Comment
-            </button>
+            <div className="text-sm text-gray-700" style={{ lineHeight: 1.7 }}>
+              {post.body.map((paragraph, index) => (
+                <p key={index} className="mb-4">{paragraph}</p>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 text-sm text-gray-500 mb-5">
+            <button type="button" onClick={() => openComposer("post")} className="hover:text-blue-600">Comment</button>
+            {canDeletePost && onDeletePost && (
+              <button type="button" onClick={onDeletePost} className="inline-flex items-center gap-1 hover:text-rose-600">
+                <Trash2 size={15} />
+                Delete
+              </button>
+            )}
+            <button type="button" className="hover:text-gray-700"><MoreHorizontal size={16} /></button>
           </div>
 
           {composerTarget === "post" && (
-            <div className="pt-4">
-              <CommentComposer
-                value={draft}
-                onChange={setDraft}
-                onSubmit={submitComment}
-                onCancel={closeComposer}
-                placeholder="Share your reply with the community..."
-              />
-            </div>
+            <CommentComposer
+              value={draft}
+              onChange={setDraft}
+              onSubmit={submitComment}
+              onCancel={closeComposer}
+              placeholder="Share your reply with the community..."
+            />
           )}
 
-          <div className="pt-4">
-            <h2 className="text-gray-700" style={{ fontSize: 14 }}>
-              {topLevelCount === 0 ? "Replies" : `${topLevelCount} ${topLevelCount === 1 ? "Reply" : "Replies"}`}
+          <div className="border-t border-gray-200 pt-6 mt-6">
+            <h2 className="text-gray-700" style={{ fontSize: 18 }}>
+              {commentCount === 0 ? "Comments" : `${commentCount} ${commentCount === 1 ? "Comment" : "Comments"}`}
             </h2>
             <CommentThread
               comments={renderedComments}
-              emptyState="Be the first to reply."
+              emptyState="No comments yet. Be the first to respond."
               activeReplyTargetId={composerTarget === "post" ? null : composerTarget}
               onReply={(comment) => openComposer(comment.id)}
               onDelete={(comment) => deleteComment(comment.id)}

@@ -1,6 +1,6 @@
 import { Bell, Home, MessageSquare, UserCog, Users } from "lucide-react";
 import { CURRENT_USER } from "../data/threads";
-import { peerProfiles } from "../peer/peerData";
+import { usePeerProfiles } from "../peer/PeerProfilesContext";
 import { PeerProfileTrigger } from "../peer/PeerName";
 
 interface HeaderProps {
@@ -20,7 +20,8 @@ const courseNames: Record<string, string> = {
 
 export function Header({ view, activeTab, onTabChange, activeCourse, onHome, onOpenSettings }: HeaderProps) {
   const isDashboard = view === "dashboard";
-  const currentUserProfile = peerProfiles[CURRENT_USER];
+  const { profiles } = usePeerProfiles();
+  const currentUserProfile = profiles[CURRENT_USER];
 
   return (
     <header className="h-12 bg-[#4a2e8a] flex items-center px-4 shrink-0">

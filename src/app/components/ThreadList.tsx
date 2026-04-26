@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Search, SlidersHorizontal, HelpCircle, Megaphone, MessageCircle, ChevronDown, Check, User, MessageSquare, Reply, Star, Eye, Heart } from "lucide-react";
 
 import { PeerName, PeerLabels } from "../peer/PeerName";
-import { courseThreads, Thread, CURRENT_USER } from "../data/threads";
+import { Thread, CURRENT_USER } from "../data/threads";
 import { filterByCommunityCategory, filterByDiscussionCategory } from "../data/threadFilters";
 
 type ParticipationFilter = "all" | "my_posts" | "replies_to_me" | "commented" | "starred" | "watched" | "liked";
@@ -17,36 +17,14 @@ const filterLabels: Record<ParticipationFilter, string> = {
   liked: "Liked",
 };
 
-const communityThreadsByC: Record<string, Thread[]> = {
-  CS6750: [
-    { id: 3001, title: "Introduce yourself! CS6750 Spring 2026", category: "Introductions", author: "Community Bot", time: "2h", comments: 47, likes: 32 },
-    { id: 3002, title: "Atlanta HCI students - coffee meetup?", category: "Meetups", author: "Sarah Chen", time: "5h", comments: 12, likes: 8 },
-    { id: 3003, title: "UX internships - who's hiring for summer?", category: "Career & Jobs", author: "Marcus Williams", time: "8h", comments: 23, likes: 15 },
-    { id: 3004, title: "Balancing CS6750 with full-time design work", category: "Class Life", author: "James Rodriguez", time: "1d", comments: 34, likes: 28 },
-    { id: 3005, title: "Favorite design books and podcasts?", category: "Hobbies & Interests", author: "Emily Park", time: "2d", comments: 14, likes: 19 },
-  ],
-  CS7646: [
-    { id: 3101, title: "Introduce yourself! CS7646 Spring 2026", category: "Introductions", author: "Community Bot", time: "1h", comments: 63, likes: 41 },
-    { id: 3102, title: "Quantitative finance career paths", category: "Career & Jobs", author: "Kevin Tran", time: "4h", comments: 31, likes: 22 },
-    { id: 3103, title: "Paper trading competitions - interested?", category: "Activities", author: "Rachel Moore", time: "6h", comments: 18, likes: 35 },
-    { id: 3104, title: "Best Python libraries for financial analysis?", category: "Class Life", author: "Sanjay Gupta", time: "1d", comments: 24, likes: 17 },
-    { id: 3105, title: "NYC ML4T students - study + networking dinner?", category: "Meetups", author: "Maria Gonzalez", time: "2d", comments: 9, likes: 12 },
-  ],
-  CS6200: [
-    { id: 3201, title: "Introduce yourself! CS6200 Spring 2026", category: "Introductions", author: "Community Bot", time: "3h", comments: 38, likes: 27 },
-    { id: 3202, title: "Systems engineering roles - interview prep", category: "Career & Jobs", author: "Chris Brooks", time: "5h", comments: 27, likes: 19 },
-    { id: 3203, title: "Virtual Linux setup - what's your dev environment?", category: "Class Life", author: "Fatima Al-Rashid", time: "10h", comments: 22, likes: 14 },
-    { id: 3204, title: "C programming - resources that helped you?", category: "Hobbies & Interests", author: "Lin Zhang", time: "1d", comments: 19, likes: 31 },
-    { id: 3205, title: "Bay Area GIOS students - weekend hike + study?", category: "Meetups", author: "Nadia Rossi", time: "3d", comments: 7, likes: 9 },
-  ],
-};
-
 interface ThreadListProps {
   activeTab: "discussion" | "community";
   activeCategory: string | null;
   selectedThread: number;
   onSelectThread: (id: number) => void;
   activeCourse: string;
+  discussionThreads: Thread[];
+  communityThreads: Thread[];
   hasCommented: (id: number) => boolean;
   getCommentCount: (id: number, baseCount: number) => number;
   getLikeCount: (id: number, baseCount: number) => number;
@@ -62,6 +40,8 @@ export function ThreadList({
   selectedThread,
   onSelectThread,
   activeCourse,
+  discussionThreads,
+  communityThreads,
   hasCommented,
   getCommentCount,
   getLikeCount,
@@ -70,7 +50,7 @@ export function ThreadList({
   isLiked,
   width,
 }: ThreadListProps) {
-  const courseThreadSource = activeTab === "discussion" ? (courseThreads[activeCourse] || courseThreads.CS6750) : (communityThreadsByC[activeCourse] || communityThreadsByC.CS6750);
+  const courseThreadSource = activeTab === "discussion" ? discussionThreads : communityThreads;
   const allThreads = activeTab === "discussion"
     ? filterByDiscussionCategory(courseThreadSource, activeCategory)
     : filterByCommunityCategory(courseThreadSource, activeCategory);

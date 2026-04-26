@@ -17,6 +17,7 @@ export interface Thread {
   answer?: { author: string; avatar: string; role: string; time: string; text: string };
   iCommented?: boolean;
   repliedToMe?: boolean;
+  createdByCurrentUser?: boolean;
 }
 
 export const CURRENT_USER = "Rahul Khanna";
