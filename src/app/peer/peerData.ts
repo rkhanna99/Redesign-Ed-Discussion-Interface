@@ -15,6 +15,7 @@ export interface PeerProfile {
   avatar: string;
   avatarColor: string;
   bio: string;
+  email?: string;
   location?: string;
   coursesTaken?: string[];
   sharedContext?: string[];
@@ -422,6 +423,20 @@ export const peerProfiles: Record<string, PeerProfile> = {
     ],
   },
 };
+
+function buildGatechEmail(name: string) {
+  const localPart = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ".")
+    .replace(/^\.+|\.+$/g, "")
+    .replace(/\.+/g, ".");
+
+  return `${localPart}@gatech.edu`;
+}
+
+for (const profile of Object.values(peerProfiles)) {
+  profile.email = profile.email || buildGatechEmail(profile.name);
+}
 
 export const labelStyles: Record<PeerLabelType, string> = {
   team_project: "bg-slate-100 text-slate-600",

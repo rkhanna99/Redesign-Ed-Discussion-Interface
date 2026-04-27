@@ -1,5 +1,6 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { BookOpen, Briefcase, Check, Clock, MapPin, MessageCircle, Sparkles, UserMinus, UserPlus } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { BookOpen, Briefcase, Check, Clock, Mail, MapPin, MessageCircle, Sparkles, UserMinus, UserPlus } from "lucide-react";
 
 import {
   Dialog,
@@ -44,6 +45,10 @@ function profileCourses(profile: PeerProfile) {
 function profileSharedContext(profile: PeerProfile, visibleLabels: PeerLabel[]) {
   if (profile.sharedContext && profile.sharedContext.length > 0) return profile.sharedContext;
   return visibleLabels.map((label) => label.text);
+}
+
+function profileEmail(profile: PeerProfile) {
+  return profile.email || "";
 }
 
 function normalizeLocation(location?: string) {
@@ -115,6 +120,7 @@ function normalizeProfile(profile: PeerProfile): PeerProfile {
     avatar: profile.avatar.trim().toUpperCase().slice(0, 3),
     avatarColor: profile.avatarColor.trim() || "bg-orange-500",
     bio: profile.bio.trim(),
+    email: profile.email?.trim() || "",
     location: profile.location?.trim() || "",
     coursesTaken: normalizeList(profile.coursesTaken),
     background: profile.background?.trim() || "",
@@ -128,62 +134,66 @@ function profileSignature(profile: PeerProfile) {
   return JSON.stringify(normalizeProfile(profile));
 }
 
-function PeerPreviewCard({ profile, visibleLabels }: { profile: PeerProfile; visibleLabels: PeerLabel[] }) {
+function PeerPreviewCardContent({ profile, visibleLabels }: { profile: PeerProfile; visibleLabels: PeerLabel[] }) {
   return (
-    <span className="pointer-events-none absolute left-0 top-full z-40 mt-1.5 opacity-0 transition-opacity group-hover:opacity-100">
-      <span className="block w-72 rounded-lg border border-gray-200 bg-white p-3.5 shadow-lg">
-        <span className="flex items-start gap-2.5">
-          <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${profile.avatarColor} text-xs text-white`} style={{ fontWeight: 600 }}>
-            {profile.avatar}
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm text-gray-900" style={{ fontWeight: 600 }}>
-              {profile.name}
-            </span>
-            {profile.background && (
-              <span className="block text-[11px] text-gray-500">{profile.background}</span>
-            )}
+    <span className="block w-72 rounded-lg border border-gray-200 bg-white p-3.5 shadow-lg">
+      <span className="flex items-start gap-2.5">
+        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${profile.avatarColor} text-xs text-white`} style={{ fontWeight: 600 }}>
+          {profile.avatar}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm text-gray-900" style={{ fontWeight: 600 }}>
+            {profile.name}
           </span>
         </span>
+        {profile.background && (
+          <span className="block text-[11px] text-gray-500">{profile.background}</span>
+        )}
+      </span>
 
-        {visibleLabels.length > 0 && (
-          <span className="mt-2.5 flex flex-wrap gap-1">
-            {visibleLabels.map((label) => (
-              <span
-                key={label.type + label.text}
-                className={pillClass(label.type)}
-                style={{ fontWeight: 400, lineHeight: 1.2 }}
-              >
-                {label.text}
-              </span>
-            ))}
+      {visibleLabels.length > 0 && (
+        <span className="mt-2.5 flex flex-wrap gap-1">
+          {visibleLabels.map((label) => (
+            <span
+              key={label.type + label.text}
+              className={pillClass(label.type)}
+              style={{ fontWeight: 400, lineHeight: 1.2 }}
+            >
+              {label.text}
+            </span>
+          ))}
+        </span>
+      )}
+
+      <span className="mt-2.5 block text-xs text-gray-600" style={{ lineHeight: 1.5 }}>
+        {profile.bio}
+      </span>
+
+      <span className="mt-2.5 flex flex-col gap-1 text-[11px] text-gray-500">
+        {profileEmail(profile) && (
+          <span className="flex items-center gap-1.5">
+            <Mail size={11} className="text-gray-400" />
+            {profileEmail(profile)}
           </span>
         )}
-
-        <span className="mt-2.5 block text-xs text-gray-600" style={{ lineHeight: 1.5 }}>
-          {profile.bio}
-        </span>
-
-        <span className="mt-2.5 flex flex-col gap-1 text-[11px] text-gray-500">
-          {profile.timezone && (
-            <span className="flex items-center gap-1.5">
-              <Clock size={11} className="text-gray-400" />
-              {profile.timezone}
-            </span>
-          )}
-          {profile.interests && profile.interests.length > 0 && (
-            <span className="flex items-center gap-1.5">
-              <Sparkles size={11} className="text-gray-400" />
-              {profile.interests.join(" / ")}
-            </span>
-          )}
-          {profile.background && (
-            <span className="flex items-center gap-1.5">
-              <Briefcase size={11} className="text-gray-400" />
-              {profile.background}
-            </span>
-          )}
-        </span>
+        {profile.timezone && (
+          <span className="flex items-center gap-1.5">
+            <Clock size={11} className="text-gray-400" />
+            {profile.timezone}
+          </span>
+        )}
+        {profile.interests && profile.interests.length > 0 && (
+          <span className="flex items-center gap-1.5">
+            <Sparkles size={11} className="text-gray-400" />
+            {profile.interests.join(" / ")}
+          </span>
+        )}
+        {profile.background && (
+          <span className="flex items-center gap-1.5">
+            <Briefcase size={11} className="text-gray-400" />
+            {profile.background}
+          </span>
+        )}
       </span>
     </span>
   );
@@ -321,6 +331,17 @@ function CurrentUserProfilePanel({ profile }: { profile: PeerProfile }) {
         </div>
 
         <div className="mt-4 grid gap-3">
+          <label className="text-sm text-gray-700">
+            <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
+              Email
+            </span>
+            <input
+              type="email"
+              value={draft.email || ""}
+              onChange={(event) => setField("email", event.target.value)}
+              className={inputClassName}
+            />
+          </label>
           <label className="text-sm text-gray-700">
             <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
               Location
@@ -535,6 +556,16 @@ function PeerDialogPanel({
 
         <div className="mb-4 grid gap-2.5 text-sm text-gray-700">
           <div className="flex items-start gap-2">
+            <Mail size={15} className="mt-0.5 shrink-0 text-gray-400" />
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
+                Email
+              </p>
+              <p>{profileEmail(profile) || "Email not shared"}</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2">
             <MapPin size={15} className="mt-0.5 shrink-0 text-gray-400" />
             <div>
               <p className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
@@ -672,6 +703,9 @@ export function PeerProfileTrigger({
   const profile = profiles[name];
   const currentUserProfile = profiles[CURRENT_USER];
   const { visible } = usePeerVisibility();
+  const wrapperRef = useRef<HTMLSpanElement | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewPosition, setPreviewPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
 
   if (!profile) return <>{children}</>;
 
@@ -679,20 +713,78 @@ export function PeerProfileTrigger({
   const courses = profileCourses(profile);
   const sharedContext = profileSharedContext(profile, visibleLabels);
 
+  const updatePreviewPosition = () => {
+    if (!wrapperRef.current || typeof window === "undefined") return;
+
+    const rect = wrapperRef.current.getBoundingClientRect();
+    const cardWidth = 288;
+    const sidePadding = 12;
+    const left = Math.min(
+      Math.max(sidePadding, rect.left),
+      window.innerWidth - cardWidth - sidePadding,
+    );
+
+    let top = rect.bottom + 6;
+    const estimatedCardHeight = 220;
+    if (top + estimatedCardHeight > window.innerHeight - sidePadding) {
+      top = Math.max(sidePadding, rect.top - estimatedCardHeight - 6);
+    }
+
+    setPreviewPosition({ top, left });
+  };
+
+  useEffect(() => {
+    if (!previewOpen) return;
+
+    updatePreviewPosition();
+    const handleViewportChange = () => updatePreviewPosition();
+    window.addEventListener("scroll", handleViewportChange, true);
+    window.addEventListener("resize", handleViewportChange);
+
+    return () => {
+      window.removeEventListener("scroll", handleViewportChange, true);
+      window.removeEventListener("resize", handleViewportChange);
+    };
+  }, [previewOpen]);
+
   return (
     <Dialog>
-      <span className={`group relative inline-flex items-center ${wrapperClassName}`}>
+      <span
+        ref={wrapperRef}
+        className={`relative inline-flex items-center ${wrapperClassName}`}
+        onMouseEnter={() => {
+          if (!showPreview) return;
+          updatePreviewPosition();
+          setPreviewOpen(true);
+        }}
+        onMouseLeave={() => setPreviewOpen(false)}
+      >
         <DialogTrigger asChild>
           <button
             type="button"
             onClick={stopPropagation ? (event) => event.stopPropagation() : undefined}
             className={buttonClassName}
+            onFocus={() => {
+              if (!showPreview) return;
+              updatePreviewPosition();
+              setPreviewOpen(true);
+            }}
+            onBlur={() => setPreviewOpen(false)}
           >
             {children}
           </button>
         </DialogTrigger>
-        {showPreview && <PeerPreviewCard profile={profile} visibleLabels={visibleLabels} />}
       </span>
+
+      {showPreview && previewOpen && typeof document !== "undefined" && createPortal(
+        <div
+          className="pointer-events-none fixed z-[80]"
+          style={{ top: previewPosition.top, left: previewPosition.left }}
+        >
+          <PeerPreviewCardContent profile={profile} visibleLabels={visibleLabels} />
+        </div>,
+        document.body,
+      )}
 
       <PeerDialogPanel
         profileKey={name}
