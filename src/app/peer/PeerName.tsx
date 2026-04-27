@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { BookOpen, Briefcase, Check, Clock, MapPin, MessageCircle, Sparkles, UserPlus } from "lucide-react";
+import { BookOpen, Briefcase, Check, Clock, MapPin, MessageCircle, Sparkles, UserMinus, UserPlus } from "lucide-react";
 
 import {
   Dialog,
@@ -10,6 +10,7 @@ import {
 } from "../components/ui/dialog";
 import { CURRENT_USER } from "../data/threads";
 import { labelDescriptions, labelStyles, type PeerLabel, type PeerLabelType, type PeerProfile } from "./peerData";
+import { usePeerConnections } from "./PeerConnectionsContext";
 import { usePeerProfiles } from "./PeerProfilesContext";
 import { usePeerVisibility } from "./PeerVisibilityContext";
 
@@ -454,10 +455,34 @@ function PeerDialogPanel({
   sharedContext: string[];
 }) {
   const isCurrentUser = profileKey === CURRENT_USER;
+  const { isConnected, hasRequestedConnection, disconnectConnection, sendConnectionRequest, sendDirectMessage } = usePeerConnections();
+  const [messageDraft, setMessageDraft] = useState("");
+  const [messageOpen, setMessageOpen] = useState(false);
+  const connected = isConnected(profileKey);
+  const requestSent = hasRequestedConnection(profileKey);
 
   if (isCurrentUser) {
     return <CurrentUserProfilePanel profile={profile} />;
   }
+
+  const handleSendMessage = () => {
+    const text = messageDraft.trim();
+    if (!text) return;
+    sendDirectMessage(profileKey, text);
+    setMessageDraft("");
+    setMessageOpen(false);
+  };
+
+  const handleConnectionAction = () => {
+    if (connected) {
+      const shouldDisconnect = window.confirm(`Disconnect from ${profile.name}?`);
+      if (!shouldDisconnect) return;
+      disconnectConnection(profileKey);
+      return;
+    }
+
+    sendConnectionRequest(profileKey);
+  };
 
   return (
     <DialogContent
@@ -552,6 +577,7 @@ function PeerDialogPanel({
         <div className="mt-4 grid grid-cols-2 gap-2">
           <button
             type="button"
+            onClick={() => setMessageOpen((open) => !open)}
             className="flex items-center justify-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50"
           >
             <MessageCircle size={14} />
@@ -559,12 +585,53 @@ function PeerDialogPanel({
           </button>
           <button
             type="button"
-            className="flex items-center justify-center gap-1.5 rounded-md bg-[#4a2e8a] px-3 py-2 text-sm text-white transition-colors hover:bg-[#3d2574]"
+            disabled={!connected && requestSent}
+            onClick={handleConnectionAction}
+            className={`flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm transition-colors ${
+              connected
+                ? "border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+                : requestSent
+                ? "cursor-not-allowed bg-emerald-50 text-emerald-700"
+                : "bg-[#4a2e8a] text-white hover:bg-[#3d2574]"
+            }`}
           >
-            <UserPlus size={14} />
-            Connect
+            {connected ? <UserMinus size={14} /> : requestSent ? <Check size={14} /> : <UserPlus size={14} />}
+            {connected ? "Disconnect" : requestSent ? "Connect request sent" : "Connect"}
           </button>
         </div>
+
+        {messageOpen && (
+          <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+            <p className="mb-2 text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
+              Direct Message
+            </p>
+            <textarea
+              value={messageDraft}
+              onChange={(event) => setMessageDraft(event.target.value)}
+              placeholder={`Write a quick note to ${profile.name}`}
+              className="min-h-24 w-full resize-none rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none transition-colors focus:border-[#4a2e8a] focus:ring-2 focus:ring-[#4a2e8a]/10"
+            />
+            <div className="mt-3 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setMessageDraft("");
+                  setMessageOpen(false);
+                }}
+                className="rounded-md px-3 py-2 text-sm text-gray-500 transition-colors hover:bg-white hover:text-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSendMessage}
+                className="rounded-md bg-[#4a2e8a] px-3 py-2 text-sm text-white transition-colors hover:bg-[#3d2574]"
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        )}
 
         {(profile.timezone || profile.interests || profile.background) && (
           <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-gray-500">

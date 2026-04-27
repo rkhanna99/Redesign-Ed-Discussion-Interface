@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { Header } from "./components/Header";
+import { ConnectionsHub } from "./components/ConnectionsHub";
 import { LeftSidebar } from "./components/LeftSidebar";
 import { NewThreadComposer, type NewThreadDraft } from "./components/NewThreadComposer";
 import { ThreadList } from "./components/ThreadList";
@@ -11,6 +12,7 @@ import { VideoCall } from "./components/VideoCall";
 import { ResizeHandle } from "./components/ResizeHandle";
 import { Dashboard } from "./components/Dashboard";
 import { getCategoryOption } from "./data/forumCategories";
+import { PeerConnectionsProvider } from "./peer/PeerConnectionsContext";
 import { PeerProfilesProvider, usePeerProfiles } from "./peer/PeerProfilesContext";
 import { PeerVisibilityProvider } from "./peer/PeerVisibilityContext";
 import { PeerVisibilitySettings } from "./peer/PeerVisibilitySettings";
@@ -71,7 +73,8 @@ function mapCommunityPostToThread(post: CommunityPost): Thread {
 
 function AppShell() {
   const { profiles } = usePeerProfiles();
-  const [view, setView] = useState<"course" | "dashboard">("course");
+  const [view, setView] = useState<"course" | "dashboard" | "connections">("course");
+  const [previousView, setPreviousView] = useState<"course" | "dashboard">("course");
   const [activeTab, setActiveTab] = useState<"discussion" | "community">("discussion");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeCourse, setActiveCourse] = useState("CS6750");
@@ -180,6 +183,17 @@ function AppShell() {
     setComposerState(null);
     setInCall(null);
     setView("dashboard");
+  };
+  const handleOpenConnections = () => {
+    if (view !== "connections") {
+      setPreviousView(view === "dashboard" ? "dashboard" : "course");
+    }
+    setComposerState(null);
+    setInCall(null);
+    setView("connections");
+  };
+  const handleBackFromConnections = () => {
+    setView(previousView);
   };
 
   const handleDashboardCourseOpen = (course: string) => {
@@ -385,7 +399,7 @@ function AppShell() {
     const roomName = `${activeCourse} Social Room`;
     return (
       <div className="h-screen flex flex-col bg-white overflow-hidden">
-        <Header view={view} activeTab={activeTab} onTabChange={handleTabChange} activeCourse={activeCourse} onHome={handleHome} onOpenSettings={() => setSettingsOpen(true)} />
+        <Header view={view} activeTab={activeTab} onTabChange={handleTabChange} activeCourse={activeCourse} onHome={handleHome} onOpenConnections={handleOpenConnections} onOpenSettings={() => setSettingsOpen(true)} />
         <div className="flex flex-1 overflow-hidden">
           <VideoCall roomName={roomName} roomType={inCall} onLeave={() => setInCall(null)} />
         </div>
@@ -396,9 +410,11 @@ function AppShell() {
 
   return (
     <div className="h-screen flex flex-col bg-white overflow-hidden">
-      <Header view={view} activeTab={activeTab} onTabChange={handleTabChange} activeCourse={activeCourse} onHome={handleHome} onOpenSettings={() => setSettingsOpen(true)} />
+      <Header view={view} activeTab={activeTab} onTabChange={handleTabChange} activeCourse={activeCourse} onHome={handleHome} onOpenConnections={handleOpenConnections} onOpenSettings={() => setSettingsOpen(true)} />
       {view === "dashboard" ? (
         <Dashboard onOpenCourse={handleDashboardCourseOpen} />
+      ) : view === "connections" ? (
+        <ConnectionsHub onBack={handleBackFromConnections} />
       ) : (
         <div className="flex flex-1 overflow-hidden">
         <LeftSidebar
@@ -508,9 +524,11 @@ function AppShell() {
 export default function App() {
   return (
     <PeerProfilesProvider>
-      <PeerVisibilityProvider>
-        <AppShell />
-      </PeerVisibilityProvider>
+      <PeerConnectionsProvider>
+        <PeerVisibilityProvider>
+          <AppShell />
+        </PeerVisibilityProvider>
+      </PeerConnectionsProvider>
     </PeerProfilesProvider>
   );
 }

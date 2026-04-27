@@ -23,7 +23,7 @@ export function LeftSidebar({ activeTab, activeCategory, onCategoryChange, activ
   const categories = activeTab === "discussion" ? discussionCategoryOptions : communityCategoryOptions;
   const currentCourses = courses.filter((course) => !course.archived);
   const archivedCourses = courses.filter((course) => course.archived);
-  const [archivedOpen, setArchivedOpen] = useState(true);
+  const [archivedOpen, setArchivedOpen] = useState(false);
 
   const renderCourse = (course: typeof courses[number]) => (
     <div

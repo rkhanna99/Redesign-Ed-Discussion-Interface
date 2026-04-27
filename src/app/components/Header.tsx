@@ -1,14 +1,15 @@
-import { Bell, Home, MessageSquare, UserCog, Users } from "lucide-react";
+import { Bell, Home, MessageCircle, MessageSquare, UserCog, Users } from "lucide-react";
 import { CURRENT_USER } from "../data/threads";
 import { usePeerProfiles } from "../peer/PeerProfilesContext";
 import { PeerProfileTrigger } from "../peer/PeerName";
 
 interface HeaderProps {
-  view: "course" | "dashboard";
+  view: "course" | "dashboard" | "connections";
   activeTab: "discussion" | "community";
   onTabChange: (tab: "discussion" | "community") => void;
   activeCourse: string;
   onHome: () => void;
+  onOpenConnections: () => void;
   onOpenSettings?: () => void;
 }
 
@@ -18,8 +19,9 @@ const courseNames: Record<string, string> = {
   CS6200: "CS6200 - Graduate Intro to OS",
 };
 
-export function Header({ view, activeTab, onTabChange, activeCourse, onHome, onOpenSettings }: HeaderProps) {
+export function Header({ view, activeTab, onTabChange, activeCourse, onHome, onOpenConnections, onOpenSettings }: HeaderProps) {
   const isDashboard = view === "dashboard";
+  const isConnections = view === "connections";
   const { profiles } = usePeerProfiles();
   const currentUserProfile = profiles[CURRENT_USER];
 
@@ -29,11 +31,11 @@ export function Header({ view, activeTab, onTabChange, activeCourse, onHome, onO
         <span className="text-white/90 tracking-wide" style={{ fontSize: 18, fontWeight: 700 }}>ed</span>
         <span className="text-white/70 text-sm">|</span>
         <span className="text-white text-sm" style={{ fontWeight: 500 }}>
-          {isDashboard ? "Dashboard" : `${courseNames[activeCourse] || activeCourse} - Ed Discussion`}
+          {isDashboard ? "Dashboard" : isConnections ? "Connections & Messages" : `${courseNames[activeCourse] || activeCourse} - Ed Discussion`}
         </span>
       </div>
 
-      {!isDashboard && (
+      {!isDashboard && !isConnections && (
         <div className="flex items-center gap-1 ml-10">
           <button
             onClick={() => onTabChange("discussion")}
@@ -66,14 +68,27 @@ export function Header({ view, activeTab, onTabChange, activeCourse, onHome, onO
           <button
             onClick={onOpenSettings}
             title="My Peer Visibility Settings"
-            className="flex items-center gap-1.5 text-white/70 hover:text-white hover:bg-white/10 px-2 py-1 rounded text-xs transition-colors"
+            className="inline-flex h-8 items-center gap-1.5 rounded px-2 text-xs text-white/70 transition-colors hover:bg-white/10 hover:text-white"
           >
             <UserCog size={15} />
             <span className="hidden md:inline">Peer visibility</span>
           </button>
         )}
-        <button className="text-white/60 hover:text-white/90 transition-colors">
+        <button
+          type="button"
+          className="inline-flex h-8 w-8 items-center justify-center rounded text-white/60 transition-colors hover:bg-white/10 hover:text-white/90"
+        >
           <Bell size={18} />
+        </button>
+        <button
+          type="button"
+          onClick={onOpenConnections}
+          title="Connections and Messages"
+          className={`inline-flex h-8 w-8 items-center justify-center rounded transition-colors ${
+            isConnections ? "bg-white/15 text-white" : "text-white/60 hover:bg-white/10 hover:text-white/90"
+          }`}
+        >
+          <MessageCircle size={18} />
         </button>
         <button
           type="button"
@@ -82,7 +97,7 @@ export function Header({ view, activeTab, onTabChange, activeCourse, onHome, onO
             onHome();
           }}
           title="Home"
-          className={`relative z-10 rounded px-2 py-1 transition-colors ${
+          className={`relative z-10 inline-flex h-8 w-8 items-center justify-center rounded transition-colors ${
             isDashboard ? "bg-white/15 text-white" : "text-white/60 hover:bg-white/10 hover:text-white/90"
           }`}
         >
