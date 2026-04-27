@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, Coffee, Hash, LogIn, MessageSquareText, Search, Smile, Sparkles, Users } from "lucide-react";
 
 import { CURRENT_USER } from "../data/threads";
@@ -16,6 +16,52 @@ const channelAccent: Record<string, string> = {
   "career-talk": "from-amber-50 to-orange-50 border-amber-100",
   "off-topic": "from-cyan-50 to-sky-50 border-cyan-100",
   introductions: "from-emerald-50 to-teal-50 border-emerald-100",
+};
+
+const channelQuickStarts: Record<ChannelName, string[]> = {
+  general: [
+    "Share how you are pacing the course this week.",
+    "Drop a study habit that is actually working for you.",
+    "Ask a quick question that does not need a full class thread.",
+  ],
+  "career-talk": [
+    "Ask for resume or interview framing feedback.",
+    "Share a networking lead or recruiter takeaway.",
+    "Compare how you are describing course projects professionally.",
+  ],
+  "off-topic": [
+    "Post a reset routine after a long study session.",
+    "Share a show, playlist, or weekend plan.",
+    "Start a lightweight conversation that has nothing to do with deadlines.",
+  ],
+  introductions: [
+    "Say where you are based and what you do.",
+    "Share what brought you to this course.",
+    "Ask if anyone nearby wants to form a study group.",
+  ],
+};
+
+const autoReplyTextByChannel: Record<ChannelName, string[]> = {
+  general: [
+    "That is a solid approach. I have been trying to spread the work out the same way this week.",
+    "Same here. Anything that reduces the last-minute rush has been worth it for me.",
+    "I like that. Small process tweaks have mattered more for me than trying to study longer.",
+  ],
+  "career-talk": [
+    "That makes sense. Framing the work clearly has been half the battle in networking conversations too.",
+    "I would agree with that. Recruiters seem to respond better when the story is concrete and specific.",
+    "That is useful. I have been trying to make my project explanations sound more practical as well.",
+  ],
+  "off-topic": [
+    "That sounds like a good reset. I have needed more low-key breaks lately too.",
+    "Strong choice. Anything that gets me away from the screen for a bit has been helping.",
+    "Same. It is nice having a corner of the course that is not just deadlines and debugging.",
+  ],
+  introductions: [
+    "Glad you are here. It sounds like you will have a great perspective to bring into the class.",
+    "Welcome. Always good meeting more classmates with a similar reason for taking the course.",
+    "Nice to meet you. I think a lot of people here are trying to find the same kind of study rhythm.",
+  ],
 };
 
 type ChannelName = "general" | "career-talk" | "off-topic" | "introductions";
@@ -308,6 +354,25 @@ function emptyDrafts() {
   };
 }
 
+function messageTimeLabel() {
+  return new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date());
+}
+
+function replyCandidatesForChannel(channel: ChannelData) {
+  const seen = new Set<string>();
+
+  return channel.messages
+    .filter((message) => message.author !== CURRENT_USER)
+    .filter((message) => {
+      if (seen.has(message.author)) return false;
+      seen.add(message.author);
+      return true;
+    });
+}
+
 export function SocialRoom({ activeCourse, onJoin }: SocialRoomProps) {
   const roomData = socialRoomDataByCourse[activeCourse] || socialRoomDataByCourse.CS6750;
   const [selectedChannel, setSelectedChannel] = useState<ChannelName>("general");
@@ -315,12 +380,21 @@ export function SocialRoom({ activeCourse, onJoin }: SocialRoomProps) {
     messagesByChannel(roomData.channels),
   );
   const [draftsByChannel, setDraftsByChannel] = useState<Record<ChannelName, string>>(emptyDrafts);
+  const replyTimeoutsRef = useRef<number[]>([]);
 
   useEffect(() => {
+    replyTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    replyTimeoutsRef.current = [];
     setSelectedChannel("general");
     setMessagesByChannelState(messagesByChannel(roomData.channels));
     setDraftsByChannel(emptyDrafts());
   }, [activeCourse, roomData]);
+
+  useEffect(() => {
+    return () => {
+      replyTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    };
+  }, []);
 
   const activeChannel = roomData.channels.find((channel) => channel.name === selectedChannel) || roomData.channels[0];
   const activeMessages = messagesByChannelState[selectedChannel] || activeChannel.messages;
@@ -342,10 +416,10 @@ export function SocialRoom({ activeCourse, onJoin }: SocialRoomProps) {
     const text = activeDraft.trim();
     if (!text) return;
 
-    const time = new Intl.DateTimeFormat("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-    }).format(new Date());
+    const time = messageTimeLabel();
+    const channelName = selectedChannel;
+    const selfMessagesInChannel = activeMessages.filter((message) => message.author === CURRENT_USER).length;
+    const candidates = replyCandidatesForChannel(activeChannel);
 
     const message: ChannelMessage = {
       author: CURRENT_USER,
@@ -356,9 +430,36 @@ export function SocialRoom({ activeCourse, onJoin }: SocialRoomProps) {
 
     setMessagesByChannelState((current) => ({
       ...current,
-      [selectedChannel]: [...(current[selectedChannel] || []), message],
+      [channelName]: [...(current[channelName] || []), message],
     }));
-    setDraftsByChannel((current) => ({ ...current, [selectedChannel]: "" }));
+    setDraftsByChannel((current) => ({ ...current, [channelName]: "" }));
+
+    if (candidates.length === 0) return;
+
+    const replyCount = selfMessagesInChannel % 2 === 0 ? Math.min(2, candidates.length) : 1;
+    const replyPool = autoReplyTextByChannel[channelName];
+
+    for (let index = 0; index < replyCount; index += 1) {
+      const responder = candidates[(selfMessagesInChannel + index) % candidates.length];
+      const replyText = replyPool[(selfMessagesInChannel + index) % replyPool.length];
+      const timeoutId = window.setTimeout(() => {
+        setMessagesByChannelState((current) => ({
+          ...current,
+          [channelName]: [
+            ...(current[channelName] || []),
+            {
+              author: responder.author,
+              avatar: responder.avatar,
+              time: messageTimeLabel(),
+              text: replyText,
+            },
+          ],
+        }));
+        replyTimeoutsRef.current = replyTimeoutsRef.current.filter((currentId) => currentId !== timeoutId);
+      }, 700 + index * 850);
+
+      replyTimeoutsRef.current.push(timeoutId);
+    }
   };
 
   return (
@@ -568,19 +669,15 @@ export function SocialRoom({ activeCourse, onJoin }: SocialRoomProps) {
                 </div>
 
                 <div className="rounded-2xl border border-[#e8def7] bg-white p-4 shadow-sm">
-                  <p className="text-xs text-gray-400" style={{ fontWeight: 600 }}>ACTIVE NOW</p>
+                  <p className="text-xs text-gray-400" style={{ fontWeight: 600 }}>QUICK STARTS</p>
                   <div className="mt-3 space-y-2">
-                    {channelMembers.map((user) => (
-                      <div key={user.name} className="flex items-center gap-3 rounded-lg bg-[#faf8fd] px-3 py-2.5">
-                        <div className="relative">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-xs text-[#4a2e8a] shadow-sm">
-                            {user.avatar}
-                          </div>
-                          <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-green-400" />
+                    {channelQuickStarts[activeChannel.name].map((item, index) => (
+                      <div key={item} className="flex items-start gap-3 rounded-lg bg-[#faf8fd] px-3 py-3">
+                        <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-[11px] text-[#4a2e8a] shadow-sm">
+                          {index + 1}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm text-gray-800">{user.name}</p>
-                          <span className={`inline-block rounded px-1.5 py-0.5 text-[10px] ${topicColors[user.topic]}`}>{user.topic}</span>
+                          <p className="text-sm leading-6 text-gray-700">{item}</p>
                         </div>
                       </div>
                     ))}
