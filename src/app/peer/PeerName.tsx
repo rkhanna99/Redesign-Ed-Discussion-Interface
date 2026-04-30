@@ -244,9 +244,9 @@ function CurrentUserProfilePanel({ profile }: { profile: PeerProfile }) {
   return (
     <DialogContent
       onClick={(event) => event.stopPropagation()}
-      className="max-w-[22rem] gap-0 overflow-hidden rounded-xl border-gray-200 bg-white p-0 text-gray-800 shadow-2xl sm:max-w-[24rem]"
+      className="flex max-h-[calc(100dvh-1.5rem)] max-w-[22rem] flex-col gap-0 overflow-hidden rounded-xl border-gray-200 bg-white p-0 text-gray-800 shadow-2xl sm:max-h-[min(90dvh,48rem)] sm:max-w-[24rem]"
     >
-      <div className="px-5 pb-4 pt-5">
+      <div className="shrink-0 px-5 pb-4 pt-5">
         <div className="flex items-start gap-4">
           <div className="shrink-0">
             <div className={`flex h-12 w-12 items-center justify-center rounded-full text-sm text-white ${draft.avatarColor}`} style={{ fontWeight: 700 }}>
@@ -262,202 +262,206 @@ function CurrentUserProfilePanel({ profile }: { profile: PeerProfile }) {
         </div>
       </div>
 
-      <div className="border-t border-gray-100 px-5 py-4">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="text-sm text-gray-700">
-            <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
-              Display Name
-            </span>
-            <input
-              type="text"
-              value={draft.name}
-              onChange={(event) => setField("name", event.target.value)}
-              className={inputClassName}
-            />
-          </label>
-          <label className="text-sm text-gray-700">
-            <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
-              Avatar Initials
-            </span>
-            <input
-              type="text"
-              maxLength={3}
-              value={draft.avatar}
-              onChange={(event) => setField("avatar", event.target.value.toUpperCase())}
-              className={inputClassName}
-            />
-          </label>
-          <label className="text-sm text-gray-700">
-            <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
-              Background
-            </span>
-            <input
-              type="text"
-              value={draft.background || ""}
-              onChange={(event) => setField("background", event.target.value)}
-              className={inputClassName}
-            />
-          </label>
-          <label className="text-sm text-gray-700">
-            <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
-              Avatar Color
-            </span>
-            <select
-              value={draft.avatarColor}
-              onChange={(event) => setField("avatarColor", event.target.value)}
-              className={inputClassName}
-            >
-              {avatarColorOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+      <div className="min-h-0 overflow-y-auto border-t border-gray-100">
+        <div className="px-5 py-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="text-sm text-gray-700">
+              <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
+                Display Name
+              </span>
+              <input
+                type="text"
+                value={draft.name}
+                onChange={(event) => setField("name", event.target.value)}
+                className={inputClassName}
+              />
+            </label>
+            <label className="text-sm text-gray-700">
+              <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
+                Avatar Initials
+              </span>
+              <input
+                type="text"
+                maxLength={3}
+                value={draft.avatar}
+                onChange={(event) => setField("avatar", event.target.value.toUpperCase())}
+                className={inputClassName}
+              />
+            </label>
+            <label className="text-sm text-gray-700">
+              <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
+                Background
+              </span>
+              <input
+                type="text"
+                value={draft.background || ""}
+                onChange={(event) => setField("background", event.target.value)}
+                className={inputClassName}
+              />
+            </label>
+            <label className="text-sm text-gray-700">
+              <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
+                Avatar Color
+              </span>
+              <select
+                value={draft.avatarColor}
+                onChange={(event) => setField("avatarColor", event.target.value)}
+                className={inputClassName}
+              >
+                {avatarColorOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
 
-        <div className="mt-4">
-          <label className="text-sm text-gray-700">
-            <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
-              About
-            </span>
-            <textarea
-              rows={4}
-              value={draft.bio}
-              onChange={(event) => setField("bio", event.target.value)}
-              className={`${inputClassName} resize-none`}
-            />
-          </label>
-        </div>
+          <div className="mt-4">
+            <label className="text-sm text-gray-700">
+              <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
+                About
+              </span>
+              <textarea
+                rows={4}
+                value={draft.bio}
+                onChange={(event) => setField("bio", event.target.value)}
+                className={`${inputClassName} resize-none`}
+              />
+            </label>
+          </div>
 
-        <div className="mt-4 grid gap-3">
-          <label className="text-sm text-gray-700">
-            <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
-              Email
-            </span>
-            <input
-              type="email"
-              value={draft.email || ""}
-              onChange={(event) => setField("email", event.target.value)}
-              className={inputClassName}
-            />
-          </label>
-          <label className="text-sm text-gray-700">
-            <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
-              Location
-            </span>
-            <input
-              type="text"
-              value={draft.location || ""}
-              onChange={(event) => setField("location", event.target.value)}
-              className={inputClassName}
-            />
-          </label>
-          <label className="text-sm text-gray-700">
-            <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
-              Courses Taken
-            </span>
-            <input
-              type="text"
-              value={(draft.coursesTaken || []).join(", ")}
-              onChange={(event) => setField("coursesTaken", event.target.value.split(","))}
-              className={inputClassName}
-            />
-          </label>
-          <label className="text-sm text-gray-700">
-            <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
-              Timezone
-            </span>
-            <input
-              type="text"
-              value={draft.timezone || ""}
-              onChange={(event) => setField("timezone", event.target.value)}
-              className={inputClassName}
-            />
-          </label>
-          <label className="text-sm text-gray-700">
-            <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
-              Interests
-            </span>
-            <input
-              type="text"
-              value={(draft.interests || []).join(", ")}
-              onChange={(event) => setField("interests", event.target.value.split(","))}
-              className={inputClassName}
-            />
-          </label>
-        </div>
+          <div className="mt-4 grid gap-3">
+            <label className="text-sm text-gray-700">
+              <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
+                Email
+              </span>
+              <input
+                type="email"
+                value={draft.email || ""}
+                onChange={(event) => setField("email", event.target.value)}
+                className={inputClassName}
+              />
+            </label>
+            <label className="text-sm text-gray-700">
+              <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
+                Location
+              </span>
+              <input
+                type="text"
+                value={draft.location || ""}
+                onChange={(event) => setField("location", event.target.value)}
+                className={inputClassName}
+              />
+            </label>
+            <label className="text-sm text-gray-700">
+              <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
+                Courses Taken
+              </span>
+              <input
+                type="text"
+                value={(draft.coursesTaken || []).join(", ")}
+                onChange={(event) => setField("coursesTaken", event.target.value.split(","))}
+                className={inputClassName}
+              />
+            </label>
+            <label className="text-sm text-gray-700">
+              <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
+                Timezone
+              </span>
+              <input
+                type="text"
+                value={draft.timezone || ""}
+                onChange={(event) => setField("timezone", event.target.value)}
+                className={inputClassName}
+              />
+            </label>
+            <label className="text-sm text-gray-700">
+              <span className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
+                Interests
+              </span>
+              <input
+                type="text"
+                value={(draft.interests || []).join(", ")}
+                onChange={(event) => setField("interests", event.target.value.split(","))}
+                className={inputClassName}
+              />
+            </label>
+          </div>
 
-        <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-3.5">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
-                Profile Labels
-              </p>
-              <p className="mt-1 text-xs text-gray-500">
-                Add the labels you want associated with your profile. Visibility settings still apply.
-              </p>
+          <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-3.5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.12em] text-gray-400" style={{ fontWeight: 700 }}>
+                  Profile Labels
+                </p>
+                <p className="mt-1 text-xs text-gray-500">
+                  Add the labels you want associated with your profile. Visibility settings still apply.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={addLabel}
+                className="shrink-0 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-gray-700 transition-colors hover:bg-gray-100"
+              >
+                Add label
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={addLabel}
-              className="shrink-0 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-gray-700 transition-colors hover:bg-gray-100"
-            >
-              Add label
-            </button>
-          </div>
 
-          <div className="mt-3 space-y-2">
-            {draft.labels.length === 0 && (
-              <div className="rounded-md border border-dashed border-gray-200 bg-white px-3 py-2 text-xs text-gray-500">
-                No labels added yet.
-              </div>
-            )}
-            {draft.labels.map((label, index) => (
-              <div key={`${label.type}-${index}`} className="grid gap-2 rounded-md border border-gray-200 bg-white p-2.5">
-                <select
-                  value={label.type}
-                  onChange={(event) => updateLabel(index, { type: event.target.value as PeerLabelType })}
-                  className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none transition-colors focus:border-[#4a2e8a] focus:ring-2 focus:ring-[#4a2e8a]/15"
-                >
-                  {editableLabelTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {labelDescriptions[type]}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="text"
-                  value={label.text}
-                  onChange={(event) => updateLabel(index, { text: event.target.value })}
-                  placeholder="Label text"
-                  className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none transition-colors focus:border-[#4a2e8a] focus:ring-2 focus:ring-[#4a2e8a]/15"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeLabel(index)}
-                  className="justify-self-start rounded-md px-2 py-1 text-xs text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
+            <div className="mt-3 space-y-2">
+              {draft.labels.length === 0 && (
+                <div className="rounded-md border border-dashed border-gray-200 bg-white px-3 py-2 text-xs text-gray-500">
+                  No labels added yet.
+                </div>
+              )}
+              {draft.labels.map((label, index) => (
+                <div key={`${label.type}-${index}`} className="grid gap-2 rounded-md border border-gray-200 bg-white p-2.5">
+                  <select
+                    value={label.type}
+                    onChange={(event) => updateLabel(index, { type: event.target.value as PeerLabelType })}
+                    className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none transition-colors focus:border-[#4a2e8a] focus:ring-2 focus:ring-[#4a2e8a]/15"
+                  >
+                    {editableLabelTypes.map((type) => (
+                      <option key={type} value={type}>
+                        {labelDescriptions[type]}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    value={label.text}
+                    onChange={(event) => updateLabel(index, { text: event.target.value })}
+                    placeholder="Label text"
+                    className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 outline-none transition-colors focus:border-[#4a2e8a] focus:ring-2 focus:ring-[#4a2e8a]/15"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeLabel(index)}
+                    className="justify-self-start rounded-md px-2 py-1 text-xs text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
+      </div>
 
-        {hasChanges && (
-          <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5">
+      {hasChanges && (
+        <div className="shrink-0 border-t border-gray-100 bg-white px-5 py-4">
+          <div className="flex items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5">
             <span className="text-xs text-emerald-800">Changes detected</span>
             <button
               type="button"
               onClick={saveProfile}
               className="rounded-md bg-[#4a2e8a] px-3 py-2 text-sm text-white transition-colors hover:bg-[#3d2574]"
             >
-              Save
+              Save changes
             </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </DialogContent>
   );
 }
