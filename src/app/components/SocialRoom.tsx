@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ArrowUpRight, Coffee, Hash, LogIn, MessageSquareText, Search, Smile, Sparkles, Users } from "lucide-react";
 
 import { CURRENT_USER } from "../data/threads";
 import { PeerLabels, PeerName } from "../peer/PeerName";
+import { ResizeHandle } from "./ResizeHandle";
 
 const topicColors: Record<string, string> = {
   "Casual chat": "bg-pink-100 text-pink-700",
@@ -373,6 +374,65 @@ function replyCandidatesForChannel(channel: ChannelData) {
     });
 }
 
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+
+function ChannelDetails({ channel, compact = false }: { channel: ChannelData; compact?: boolean }) {
+  const cardClassName = compact
+    ? "rounded-xl border border-[#e8def7] bg-white p-3 shadow-sm"
+    : "rounded-2xl border border-[#e8def7] bg-white p-4 shadow-sm";
+  const chipClassName = compact
+    ? "rounded-full bg-[#f4effd] px-2 py-1 text-[10px] text-[#4a2e8a]"
+    : "rounded-full bg-[#f4effd] px-2.5 py-1 text-[11px] text-[#4a2e8a]";
+  const pinnedClassName = compact
+    ? "rounded-lg bg-[#faf8fd] px-2.5 py-2 text-xs text-gray-600"
+    : "rounded-lg bg-[#faf8fd] px-3 py-2 text-sm text-gray-600";
+  const quickStartTextClassName = compact
+    ? "text-xs leading-5 text-gray-700"
+    : "text-sm leading-6 text-gray-700";
+
+  return (
+    <>
+      <div className={cardClassName}>
+        <p className="text-xs text-gray-400" style={{ fontWeight: 600 }}>CHANNEL FOCUS</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {channel.focus.map((item) => (
+            <span key={item} className={chipClassName}>
+              {item}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className={cardClassName}>
+        <p className="text-xs text-gray-400" style={{ fontWeight: 600 }}>PINNED</p>
+        <div className="mt-3 space-y-2">
+          {channel.pinned.map((item) => (
+            <div key={item} className={pinnedClassName}>
+              {item}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className={cardClassName}>
+        <p className="text-xs text-gray-400" style={{ fontWeight: 600 }}>QUICK STARTS</p>
+        <div className="mt-3 space-y-2">
+          {channelQuickStarts[channel.name].map((item, index) => (
+            <div key={item} className="flex items-start gap-3 rounded-lg bg-[#faf8fd] px-3 py-3">
+              <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-[11px] text-[#4a2e8a] shadow-sm">
+                {index + 1}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className={quickStartTextClassName}>{item}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
 export function SocialRoom({ activeCourse, onJoin }: SocialRoomProps) {
   const roomData = socialRoomDataByCourse[activeCourse] || socialRoomDataByCourse.CS6750;
   const [selectedChannel, setSelectedChannel] = useState<ChannelName>("general");
@@ -380,6 +440,8 @@ export function SocialRoom({ activeCourse, onJoin }: SocialRoomProps) {
     messagesByChannel(roomData.channels),
   );
   const [draftsByChannel, setDraftsByChannel] = useState<Record<ChannelName, string>>(emptyDrafts);
+  const [sidebarWidth, setSidebarWidth] = useState(280);
+  const [detailsWidth, setDetailsWidth] = useState(220);
   const replyTimeoutsRef = useRef<number[]>([]);
 
   useEffect(() => {
@@ -400,6 +462,8 @@ export function SocialRoom({ activeCourse, onJoin }: SocialRoomProps) {
   const activeMessages = messagesByChannelState[selectedChannel] || activeChannel.messages;
   const activeDraft = draftsByChannel[selectedChannel] || "";
   const canSend = activeDraft.trim().length > 0;
+  const resizeSidebar = (dx: number) => setSidebarWidth((width) => clamp(width + dx, 220, 380));
+  const resizeDetails = (dx: number) => setDetailsWidth((width) => clamp(width - dx, 170, 300));
 
   const channelMembers = roomData.users.filter((user) => {
     if (activeChannel.name === "general") return true;
@@ -464,8 +528,11 @@ export function SocialRoom({ activeCourse, onJoin }: SocialRoomProps) {
 
   return (
     <div className="flex-1 overflow-hidden bg-[#fbfaff]">
-      <div className="flex h-full flex-col xl:flex-row">
-        <aside className="w-full shrink-0 border-b border-[#e9e3f6] bg-white xl:h-full xl:w-[350px] xl:border-b-0 xl:border-r">
+      <div className="flex h-full min-h-0 flex-col lg:flex-row">
+        <aside
+          className="w-full shrink-0 border-b border-[#e9e3f6] bg-white lg:h-full lg:w-[var(--social-room-sidebar-width)] lg:border-b-0 lg:border-r"
+          style={{ "--social-room-sidebar-width": `${sidebarWidth}px` } as CSSProperties}
+        >
           <div className="flex h-full flex-col">
             <div className="border-b border-[#eee7f9] bg-gradient-to-r from-pink-50 to-orange-50 px-5 py-5">
               <div className="mb-2 flex items-center gap-2">
@@ -473,7 +540,7 @@ export function SocialRoom({ activeCourse, onJoin }: SocialRoomProps) {
                 <h2 className="text-gray-800" style={{ fontSize: 19 }}>{activeCourse} Social Room</h2>
               </div>
               <p className="text-sm text-gray-500">A lighter-weight space for chats, intros, career advice, and meeting classmates outside class threads.</p>
-              <div className="mt-3 flex items-center justify-between">
+              <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <span className="flex items-center gap-1.5 text-xs text-gray-500">
                   <span className="h-2 w-2 rounded-full bg-pink-400 animate-pulse" />
                   {roomData.users.length} students hanging out
@@ -510,10 +577,10 @@ export function SocialRoom({ activeCourse, onJoin }: SocialRoomProps) {
                           isSelected ? "bg-[#4a2e8a] text-white shadow-sm" : "bg-[#faf8fd] text-gray-700 hover:bg-[#f3eefc]"
                         }`}
                       >
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <Hash size={14} className={isSelected ? "text-white/85" : "text-gray-400"} />
-                          <span className="text-sm" style={{ fontWeight: 500 }}>{channel.name}</span>
-                          <span className={`ml-auto text-[10px] ${isSelected ? "text-white/75" : "text-gray-400"}`}>{channel.active} active</span>
+                          <span className="min-w-0 text-sm" style={{ fontWeight: 500 }}>{channel.name}</span>
+                          <span className={`text-[10px] sm:ml-auto ${isSelected ? "text-white/75" : "text-gray-400"}`}>{channel.active} active</span>
                         </div>
                         <p className={`mt-1 text-xs ${isSelected ? "text-white/75" : "text-gray-400"}`}>{channel.desc}</p>
                       </button>
@@ -538,7 +605,7 @@ export function SocialRoom({ activeCourse, onJoin }: SocialRoomProps) {
                         <p className="truncate text-sm text-gray-800">{user.name}</p>
                         <span className={`inline-block rounded px-1.5 py-0.5 text-[10px] ${topicColors[user.topic]}`}>{user.topic}</span>
                       </div>
-                      <button type="button" className="text-xs text-gray-400 hover:text-pink-500">
+                      <button type="button" className="shrink-0 text-xs text-gray-400 hover:text-pink-500">
                         <Smile size={14} />
                       </button>
                     </div>
@@ -548,12 +615,15 @@ export function SocialRoom({ activeCourse, onJoin }: SocialRoomProps) {
             </div>
           </div>
         </aside>
+        <div className="hidden lg:block">
+          <ResizeHandle onResize={resizeSidebar} />
+        </div>
 
-        <main className="min-w-0 flex-1 bg-[#faf8fd]">
-          <div className="flex h-full flex-col 2xl:flex-row">
-            <section className="min-h-0 flex-1 border-r border-[#ebe5f6] bg-white">
+        <main className="min-w-0 flex-1 overflow-hidden bg-[#faf8fd]">
+          <div className="flex h-full min-h-0 flex-col lg:flex-row">
+            <section className="flex min-h-0 flex-1 flex-col bg-white lg:border-r lg:border-[#ebe5f6]">
               <div className={`border-b bg-gradient-to-r px-6 py-5 ${channelAccent[activeChannel.name]}`}>
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <div className="flex items-center gap-2 text-[#4a2e8a]">
                       <Hash size={16} />
@@ -577,7 +647,7 @@ export function SocialRoom({ activeCourse, onJoin }: SocialRoomProps) {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-6 py-5">
+              <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6">
                 <div className="mb-4 flex items-center gap-2 text-[11px] text-gray-400">
                   <span className="h-px flex-1 bg-[#ece6f7]" />
                   <span>Today</span>
@@ -623,7 +693,7 @@ export function SocialRoom({ activeCourse, onJoin }: SocialRoomProps) {
                     placeholder={`Message #${activeChannel.name}`}
                     className="min-h-16 w-full resize-none bg-transparent text-sm text-gray-700 outline-none placeholder:text-gray-400"
                   />
-                  <div className="mt-3 flex items-center justify-between">
+                  <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400">
                       <span className="rounded-md bg-white px-2 py-1">Thread</span>
                       <span className="rounded-md bg-white px-2 py-1">Emoji</span>
@@ -643,45 +713,17 @@ export function SocialRoom({ activeCourse, onJoin }: SocialRoomProps) {
                 </div>
               </div>
             </section>
+            <div className="hidden lg:block">
+              <ResizeHandle onResize={resizeDetails} />
+            </div>
 
-            <aside className="w-full shrink-0 border-t border-[#ebe5f6] bg-[#fcfbff] 2xl:w-[290px] 2xl:border-t-0">
+            <aside
+              className="w-full shrink-0 border-t border-[#ebe5f6] bg-[#fcfbff] lg:min-h-0 lg:w-[var(--social-room-details-width)] lg:border-t-0 lg:border-l"
+              style={{ "--social-room-details-width": `${detailsWidth}px` } as CSSProperties}
+            >
               <div className="h-full overflow-y-auto px-5 py-5">
-                <div className="mb-4 rounded-2xl border border-[#e8def7] bg-white p-4 shadow-sm">
-                  <p className="text-xs text-gray-400" style={{ fontWeight: 600 }}>CHANNEL FOCUS</p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {activeChannel.focus.map((item) => (
-                      <span key={item} className="rounded-full bg-[#f4effd] px-2.5 py-1 text-[11px] text-[#4a2e8a]">
-                        {item}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mb-4 rounded-2xl border border-[#e8def7] bg-white p-4 shadow-sm">
-                  <p className="text-xs text-gray-400" style={{ fontWeight: 600 }}>PINNED</p>
-                  <div className="mt-3 space-y-2">
-                    {activeChannel.pinned.map((item) => (
-                      <div key={item} className="rounded-lg bg-[#faf8fd] px-3 py-2 text-sm text-gray-600">
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-[#e8def7] bg-white p-4 shadow-sm">
-                  <p className="text-xs text-gray-400" style={{ fontWeight: 600 }}>QUICK STARTS</p>
-                  <div className="mt-3 space-y-2">
-                    {channelQuickStarts[activeChannel.name].map((item, index) => (
-                      <div key={item} className="flex items-start gap-3 rounded-lg bg-[#faf8fd] px-3 py-3">
-                        <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-[11px] text-[#4a2e8a] shadow-sm">
-                          {index + 1}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm leading-6 text-gray-700">{item}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                <div className="space-y-4">
+                  <ChannelDetails channel={activeChannel} compact />
                 </div>
               </div>
             </aside>
